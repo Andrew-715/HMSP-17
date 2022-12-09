@@ -44,11 +44,20 @@ class Director(db.Model):
     name = db.Column(db.String(255))
 
 
+class DirectorSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str()
+
+
 class Genre(db.Model):
     __tablename__ = 'genre'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
 
+
+class GenreSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str()
 
 movie_schema = MovieSchema(many=True)
 
@@ -72,7 +81,7 @@ class MoviesView(Resource):
             db.session.add(new_movie)
         return '', 201
 
-@movie_ns.route('/<int:mid>')
+@movie_ns.route('/<int:mid>/')
 class MovieView(Resource):
     def get(self, mid:int):
         try:
@@ -100,6 +109,57 @@ class MovieView(Resource):
         movie = Movie.query.get(mid)
         with db.session.begin():
             db.session.delete(movie)
+            db.session.commit()
+        return '', 204
+
+@director_ns.route('/<int:did>')
+class DirectorView(Resource):
+    def post(self):
+        req_json = request.json
+        new_director = Director(**req_json)
+        with db.session.begin():
+            db.session.add(new_director)
+        return '', 201
+
+    def put(self, did:int):
+        director = Director.query.get(did)
+        req_json = request.json
+        director.name = req_json.get('name')
+        with db.session.begin():
+            db.session.add(director)
+            db.session.commit()
+        return '', 204
+
+    def delete(self, did:int):
+        director = Director.query.get(did)
+        with db.session.begin():
+            db.session.delete(director)
+            db.session.commit()
+        return '', 204
+
+
+@genre_ns.route('/<int:gid>')
+class DirectorView(Resource):
+    def post(self):
+        req_json = request.json
+        new_genre = Genre(**req_json)
+        with db.session.begin():
+            db.session.add(new_genre)
+        return '', 201
+
+    def put(self, gid:int):
+        genre = Genre.query.get(gid)
+        req_json = request.json
+        genre.name = req_json.get('name')
+        with db.session.begin():
+            db.session.add(genre)
+            db.session.commit()
+        return '', 204
+
+    def delete(self, gid:int):
+        genre = Genre.query.get(gid)
+        with db.session.begin():
+            db.session.delete(genre)
             db.session.commit()
         return '', 204
 

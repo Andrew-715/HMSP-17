@@ -139,7 +139,7 @@ class DirectorView(Resource):
 
 
 @genre_ns.route('/<int:gid>')
-class DirectorView(Resource):
+class GenreView(Resource):
     def post(self):
         req_json = request.json
         new_genre = Genre(**req_json)

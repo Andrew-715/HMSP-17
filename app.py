@@ -7,11 +7,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-api = Api(app)
-
-movie_ns = api.namespace('movie')
-director_ns = api.namespace('director')
-genre_ns = api.namespace('genre')
 
 class Movie(db.Model):
     __tablename__ = 'movie'
@@ -59,40 +54,60 @@ class GenreSchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str()
 
-movie_schema = MovieSchema(many=True)
 
+movie_schema = MovieSchema()
+movies_schema = MovieSchema(many=True)
+
+director_schema = DirectorSchema()
+directors_schema = DirectorSchema(many=True)
+
+genre_schema = GenreSchema()
+genres_schema = GenreSchema(many=True)
+
+
+api = Api(app)
+movie_ns = api.namespace('movies')
+director_ns = api.namespace('director')
+genre_ns = api.namespace('genre')
 
 @movie_ns.route('/')
 class MoviesView(Resource):
     def get(self):
-        director = request.args.get(Movie.director)
+        director = request.args.get('director_id')
+        genre = request.args.get('genre_id')
 
-        if director is None:
-            movies = Movie.query.all()
-            return movie_schema.dump(movies), 200
+        if director is not None:
+            movies = Movie.query.filter(Movie.director_id == director)
+            return movies_schema.dump(movies), 200
+        elif genre is not None:
+            movies = Movie.query.filter(Movie.genre_id == genre)
+            return movies_schema.dump(movies), 200
         else:
-            movies = Movie.query.filter(Movie.director == Movie.director_id)
-            return movie_schema.dump(movies), 200
+            movies = db.session.query(Movie).all()
+            return movies_schema.dump(movies), 200
 
     def post(self):
         req_json = request.json
         new_movie = Movie(**req_json)
+
         with db.session.begin():
             db.session.add(new_movie)
         return '', 201
 
-@movie_ns.route('/<int:mid>/')
+@movie_ns.route('/<int:mid>')
 class MovieView(Resource):
     def get(self, mid:int):
         try:
             movie = Movie.query.get(mid)
             return movie_schema.dump(movie), 200
-        except Exception:
-            return '', 404
+
+        except Exception as e:
+            return str(e), 404
 
     def put(self, mid:int):
         movie = Movie.query.get(mid)
         req_json = request.json
+
         movie.title = req_json.get('title')
         movie.description = req_json.get('description')
         movie.trailer = req_json.get('trailer')
@@ -100,6 +115,7 @@ class MovieView(Resource):
         movie.rating = req_json.get('rating')
         movie.genre_id = req_json.get('genre_id')
         movie.director_id = req_json.get('director_id')
+
         with db.session.begin():
             db.session.add(movie)
             db.session.commit()
@@ -107,6 +123,7 @@ class MovieView(Resource):
 
     def delete(self, mid:int):
         movie = Movie.query.get(mid)
+
         with db.session.begin():
             db.session.delete(movie)
             db.session.commit()
@@ -117,14 +134,17 @@ class DirectorView(Resource):
     def post(self):
         req_json = request.json
         new_director = Director(**req_json)
+
         with db.session.begin():
             db.session.add(new_director)
         return '', 201
 
     def put(self, did:int):
         director = Director.query.get(did)
+
         req_json = request.json
         director.name = req_json.get('name')
+
         with db.session.begin():
             db.session.add(director)
             db.session.commit()
@@ -132,6 +152,7 @@ class DirectorView(Resource):
 
     def delete(self, did:int):
         director = Director.query.get(did)
+
         with db.session.begin():
             db.session.delete(director)
             db.session.commit()
@@ -143,14 +164,17 @@ class GenreView(Resource):
     def post(self):
         req_json = request.json
         new_genre = Genre(**req_json)
+
         with db.session.begin():
             db.session.add(new_genre)
         return '', 201
 
     def put(self, gid:int):
         genre = Genre.query.get(gid)
+
         req_json = request.json
         genre.name = req_json.get('name')
+
         with db.session.begin():
             db.session.add(genre)
             db.session.commit()
@@ -158,6 +182,7 @@ class GenreView(Resource):
 
     def delete(self, gid:int):
         genre = Genre.query.get(gid)
+
         with db.session.begin():
             db.session.delete(genre)
             db.session.commit()
@@ -165,4 +190,4 @@ class GenreView(Resource):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=8000)

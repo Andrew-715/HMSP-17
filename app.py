@@ -89,9 +89,7 @@ class MoviesView(Resource):
     def post(self):
         req_json = request.json
         new_movie = Movie(**req_json)
-
-        with db.session.begin():
-            db.session.add(new_movie)
+        db.session.add(new_movie)
         return 'Movie added', 201
 
 @movie_ns.route('/<int:mid>')
@@ -116,17 +114,14 @@ class MovieView(Resource):
         movie.genre_id = req_json.get('genre_id')
         movie.director_id = req_json.get('director_id')
 
-        with db.session.begin():
-            db.session.add(movie)
-            db.session.commit()
+        db.session.add(movie)
+        db.session.commit()
         return 'Movie updated', 204
 
     def delete(self, mid:int):
         movie = Movie.query.get(mid)
-
-        with db.session.begin():
-            db.session.delete(movie)
-            db.session.commit()
+        db.session.delete(movie)
+        db.session.commit()
         return 'Movie deleted', 204
 
 @director_ns.route('/')
@@ -138,16 +133,14 @@ class DirectorsView(Resource):
     def post(self):
         req_json = request.json
         new_director = Director(**req_json)
-
-        with db.session.begin():
-            db.session.add(new_director)
+        db.session.add(new_director)
         return 'Director added', 201
 
 @director_ns.route('/<int:did>')
 class DirectorView(Resource):
-    def get(self, mid:int):
+    def get(self, did:int):
         try:
-            director = Director.query.get(mid)
+            director = Director.query.get(did)
             return director_schema.dump(director), 200
 
         except Exception as e:
@@ -159,17 +152,14 @@ class DirectorView(Resource):
         req_json = request.json
         director.name = req_json.get('name')
 
-        with db.session.begin():
-            db.session.add(director)
-            db.session.commit()
+        db.session.add(director)
+        db.session.commit()
         return 'Director updated', 204
 
     def delete(self, did:int):
         director = Director.query.get(did)
-
-        with db.session.begin():
-            db.session.delete(director)
-            db.session.commit()
+        db.session.delete(director)
+        db.session.commit()
         return 'Director deleted', 204
 
 @genre_ns.route('/')
@@ -181,16 +171,14 @@ class GenressView(Resource):
     def post(self):
         req_json = request.json
         new_genre = Genre(**req_json)
-
-        with db.session.begin():
-            db.session.add(new_genre)
+        db.session.add(new_genre)
         return 'Genre added', 201
 
 @genre_ns.route('/<int:gid>')
 class GenreView(Resource):
-    def get(self, mid:int):
+    def get(self, gid:int):
         try:
-            genre = Genre.query.get(mid)
+            genre = Genre.query.get(gid)
             return genre_schema.dump(genre), 200
 
         except Exception as e:
@@ -202,17 +190,14 @@ class GenreView(Resource):
         req_json = request.json
         genre.name = req_json.get('name')
 
-        with db.session.begin():
-            db.session.add(genre)
-            db.session.commit()
+        db.session.add(genre)
+        db.session.commit()
         return '', 204
 
     def delete(self, gid:int):
         genre = Genre.query.get(gid)
-
-        with db.session.begin():
-            db.session.delete(genre)
-            db.session.commit()
+        db.session.delete(genre)
+        db.session.commit()
         return '', 204
 
 
